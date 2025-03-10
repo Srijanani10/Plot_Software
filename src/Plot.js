@@ -7,6 +7,12 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
   const zoomState = useRef({ startValue: null, endValue: null });
   const [zoomRange, setZoomRange] = useState({ start: "", end: "" });
   const [zoomedData, setZoomedData] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleOptionClick = (action) => {
+    action();         // Call the relevant download function
+    setIsOpen(false); // Close dropdown after clicking
+  };
 
   useEffect(() => {
     if (data.length > 0 && indexColumn) {
@@ -181,9 +187,9 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
     ? selectedColumns.map((col, index) => ({
         type: "value",
         name: col,
-        position: index % 2 === 0 ? "left" : "right",
+        position: "right",
         alignTicks: true,
-        offset: index * 50,
+        offset: index * 60,
         axisLine: { show: true },
         splitLine: { show: index === 0 },
       }))
@@ -251,10 +257,10 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
       },
     },
     grid: {
-      show: true,
-      containLabel: true,
+      show: false,
+      containLabel: false,
       left: "12%",
-      right: "12%",
+      right: "12%", // ❗ Fixed right margin
       bottom: "25%",
       top: "22%",
       backgroundColor: "transparent",
@@ -287,6 +293,8 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
         backgroundColor: "#fff",
         borderRadius: "10px",
         boxShadow: "0px 4px 8px rgba(0,0,0,0.1)",
+        overflowX: "auto",           // 👈 Add horizontal scrollbar
+        overflowY: "hidden",         // 👈 Optional: If you only want horizontal scroll here
       }}
     >
       <div
@@ -327,41 +335,79 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
         >
           Apply Zoom
         </button>
+        <div style={{ position: "relative", marginTop: "20px" }}>
         <button
-          onClick={handleDownloadCSV}
+          onClick={() => setIsOpen(!isOpen)}
           style={{
-            marginBottom: "10px",
-            padding: "8px 16px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
+            padding: "10px 20px",
             cursor: "pointer",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            backgroundColor: "#f9f9f9",
           }}
         >
-          Download Visible Plot as CSV
+          📥 Export Data ▼
         </button>
-        <button
-          onClick={handleDownloadZoomedCSV}
-          style={{
-            marginBottom: "10px",
-            padding: "8px 16px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Download all Plot as CSV
-        </button>
-      </div>
+
+        {isOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "45px",
+              left: "0",
+              backgroundColor: "#fff",
+              boxShadow: "0px 8px 16px rgba(0,0,0,0.2)",
+              zIndex: 1,
+              minWidth: "250px",
+              borderRadius: "5px",
+            }}
+          >
+            <div
+              onClick={() => handleOptionClick(handleDownloadCSV)}
+              style={{
+                padding: "12px 16px",
+                cursor: "pointer",
+                borderBottom: "1px solid #eee",
+                backgroundColor: "#fff",
+                transition: "background-color 0.2s",
+              }}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = "#f5f5f5")}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = "#fff")}
+            >
+              📥 Export Visible Data (Selected Columns)
+            </div>
+            <div
+              onClick={() => handleOptionClick(handleDownloadZoomedCSV)}
+              style={{
+                padding: "12px 16px",
+                cursor: "pointer",
+                backgroundColor: "#fff",
+                transition: "background-color 0.2s",
+              }}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = "#f5f5f5")}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = "#fff")}
+            >
+              📥 Export Visible Data (All Parameters)
+            </div>
+          </div>
+        )}
+    </div>
+    </div>
+      {/* Wrap the chart in a wide container */}
+      <div
+        style={{
+          width: "100px",            // 👈 Increase the fixed width of the chart area
+          minWidth: "1000px",         // 👈 Ensure it doesn't shrink smaller
+          height: "650px",
+        }}
+      >
       <ReactECharts
         ref={chartRef}
         option={options}
         style={{ height: "650px", width: "100%" }}
         onEvents={handleChartEvents}
       />
+    </div>
     </div>
   );
 };
