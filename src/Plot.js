@@ -280,136 +280,144 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
     legend: {
       data: selectedColumns,
       bottom: 10,
+      
     },
     animationDuration: 800,
   };
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "750px",
-        padding: "15px",
-        backgroundColor: "#fff",
-        borderRadius: "10px",
-        boxShadow: "0px 4px 8px rgba(0,0,0,0.1)",
-        overflowX: "auto",           // 👈 Add horizontal scrollbar
-        overflowY: "hidden",         // 👈 Optional: If you only want horizontal scroll here
-      }}
-    >
-      <div
-        style={{
-          marginBottom: "10px",
-          display: "flex",
-          gap: "10px",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={{ fontWeight: "bold" }}>Custom Zooming with X-Axis:</span>
-        <input
-          type="text"
-          name="start"
-          value={zoomRange.start || ""}
-          onChange={handleZoomInputChange}
-          placeholder="Start"
-        />
-        <span>to</span>
-        <input
-          type="text"
-          name="end"
-          value={zoomRange.end || ""}
-          onChange={handleZoomInputChange}
-          placeholder="End"
-        />
-        <button
-          onClick={applyZoom}
-          style={{
-            padding: "8px 15px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Apply Zoom
-        </button>
-        <div style={{ position: "relative", marginTop: "20px" }}>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          style={{
-            padding: "10px 20px",
-            cursor: "pointer",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            backgroundColor: "#f9f9f9",
-          }}
-        >
-          📥 Export Data ▼
-        </button>
+    <div style={styles.container}>
+      <div style={styles.controls}>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Start:</label>
+          <input
+            style={styles.input}
+            type="text"
+            name="start"
+            value={zoomRange.start}
+            onChange={handleZoomInputChange}
+          />
+        </div>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>End:</label>
+          <input
+            style={styles.input}
+            type="text"
+            name="end"
+            value={zoomRange.end}
+            onChange={handleZoomInputChange}
+          />
+        </div>
+        <button style={styles.button} onClick={applyZoom}>Apply Zoom</button>
 
-        {isOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "45px",
-              left: "0",
-              backgroundColor: "#fff",
-              boxShadow: "0px 8px 16px rgba(0,0,0,0.2)",
-              zIndex: 1,
-              minWidth: "250px",
-              borderRadius: "5px",
-            }}
+        <div style={styles.dropdownWrapper}>
+          <button
+            style={styles.dropdownButton}
+            onClick={() => setIsOpen(!isOpen)}
           >
-            <div
-              onClick={() => handleOptionClick(handleDownloadCSV)}
-              style={{
-                padding: "12px 16px",
-                cursor: "pointer",
-                borderBottom: "1px solid #eee",
-                backgroundColor: "#fff",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = "#f5f5f5")}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "#fff")}
-            >
-              📥 Export Visible Data (Selected Columns)
+            📥 Export Options
+          </button>
+          {isOpen && (
+            <div style={styles.dropdown}>
+              <button
+                style={styles.dropdownItem}
+                onClick={() => handleOptionClick(handleDownloadCSV)}
+              >
+                Export Selected Columns CSV
+              </button>
+              <button
+                style={styles.dropdownItem}
+                onClick={() => handleOptionClick(handleDownloadZoomedCSV)}
+              >
+                Export All Parameters CSV
+              </button>
             </div>
-            <div
-              onClick={() => handleOptionClick(handleDownloadZoomedCSV)}
-              style={{
-                padding: "12px 16px",
-                cursor: "pointer",
-                backgroundColor: "#fff",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = "#f5f5f5")}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "#fff")}
-            >
-              📥 Export Visible Data (All Parameters)
-            </div>
-          </div>
-        )}
-    </div>
-    </div>
-      {/* Wrap the chart in a wide container */}
-      <div
-        style={{
-          width: "100px",            // 👈 Increase the fixed width of the chart area
-          minWidth: "1000px",         // 👈 Ensure it doesn't shrink smaller
-          height: "650px",
-        }}
-      >
+          )}
+        </div>
+      </div>
+
       <ReactECharts
         ref={chartRef}
         option={options}
-        style={{ height: "650px", width: "100%" }}
+        style={{
+          height: "600px",
+          width: "100%",
+          marginTop: "20px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        }}
         onEvents={handleChartEvents}
       />
-    </div>
+
     </div>
   );
+};
+
+const styles = {
+  container: {
+    padding: "20px",
+    fontFamily: "Arial, sans-serif",
+  },
+  controls: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: "12px",
+    marginBottom: "20px",
+  },
+  inputGroup: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  label: {
+    fontSize: "14px",
+    fontWeight: "bold",
+  },
+  input: {
+    padding: "8px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    width: "160px",
+    transition: "border 0.3s ease",
+  },
+  button: {
+    backgroundColor: "#4CAF50",
+    color: "white",
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
+  },
+  dropdownWrapper: {
+    position: "relative",
+  },
+  dropdownButton: {
+    backgroundColor: "#2196F3",
+    color: "white",
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+  },
+  dropdown: {
+    position: "absolute",
+    top: "42px",
+    right: 0,
+    backgroundColor: "white",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+    zIndex: 1,
+  },
+  dropdownItem: {
+    padding: "10px 16px",
+    cursor: "pointer",
+    borderBottom: "1px solid #eee",
+    backgroundColor: "white",
+    transition: "background-color 0.3s ease",
+  },
 };
 
 export default PlotComponent;

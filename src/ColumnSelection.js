@@ -1,16 +1,47 @@
 import React, { useState } from "react";
 import {
-  Checkbox,
-  FormControlLabel,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Box,
   Typography,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
   Divider,
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
+
+// Styled container for sections
+const SectionPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius * 2,
+  boxShadow: theme.shadows[2],
+}));
+
+// Scrollable list for parameters
+const ParameterList = styled(Box)(({ theme }) => ({
+  maxHeight: "300px",
+  overflowY: "auto",
+  padding: theme.spacing(1),
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: "#fafafa",
+}));
+
+const ParameterItem = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  padding: theme.spacing(1),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  transition: "background-color 0.3s",
+  "&:hover": {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
 
 const ColumnSelection = ({
   columns = [],
@@ -28,76 +59,119 @@ const ColumnSelection = ({
 
   const selectedSet = new Set(selectedColumns);
 
+  const allFilteredSelected =
+    filteredColumns.length > 0 &&
+    filteredColumns.every((col) => selectedSet.has(col));
+
+  const handleSelectAll = (checked) => {
+    filteredColumns.forEach((col) => {
+      onColumnSelect(col, checked);
+    });
+  };
+
   return (
-    <Box p={2}>
-      {/* Search Box */}
-      <TextField
-        label="Search Columns"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        fullWidth
-        margin="normal"
-      />
+    <Box>
+      <Typography variant="h5" color="primary" fontWeight={600} gutterBottom>
+        Column Selection
+      </Typography>
 
       {/* X-Axis Selector */}
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Select X-Axis Column</InputLabel>
-        <Select
-          value={selectedColumns.length > 0 ? selectedColumns[0] : ""}
-          onChange={(e) => onIndexColumnSelect(e.target.value)}
-        >
-          {columns.map((col) => (
-            <MenuItem key={col} value={col}>
-              {col}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <SectionPaper>
+        <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+          Select X-Axis Column
+        </Typography>
+        <FormControl fullWidth size="small">
+          <InputLabel>X-Axis Column</InputLabel>
+          <Select
+            value={selectedColumns.length > 0 ? selectedColumns[0] : ""}
+            onChange={(e) => onIndexColumnSelect(e.target.value)}
+            label="X-Axis Column"
+          >
+            {columns.map((col) => (
+              <MenuItem key={col} value={col}>
+                {col}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </SectionPaper>
 
-      {/* Y-Axis Parameters */}
-      <Box mt={3}>
-        <Typography variant="subtitle1" gutterBottom>
+      {/* Search Section */}
+      <SectionPaper>
+        <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+          Search Columns
+        </Typography>
+        <TextField
+          fullWidth
+          size="small"
+          variant="outlined"
+          placeholder="Search columns..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </SectionPaper>
+
+      
+
+      {/* Y-Axis Parameter Selection */}
+      <SectionPaper>
+        <Typography variant="subtitle1" fontWeight={500} gutterBottom>
           Select Y-Axis Parameters
         </Typography>
-        <Divider />
 
-        <Box
-          sx={{
-            maxHeight: 300,
-            overflowY: "auto",
-            border: "1px solid #ddd",
-            borderRadius: 1,
-            p: 2,
-            mt: 1,
-          }}
-        >
-          {/* Organized in Column Layout */}
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={1} // spacing between items
-          >
-            {filteredColumns.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                No columns found.
-              </Typography>
-            ) : (
-              filteredColumns.map((col) => (
+        {filteredColumns.length > 0 && (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={allFilteredSelected}
+                indeterminate={
+                  !allFilteredSelected &&
+                  filteredColumns.some((col) => selectedSet.has(col))
+                }
+                onChange={(e) => handleSelectAll(e.target.checked)}
+              />
+            }
+            label="Select All Filtered"
+          />
+        )}
+
+        <Divider sx={{ my: 1 }} />
+
+        <ParameterList>
+          {filteredColumns.length === 0 ? (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              align="center"
+              sx={{ mt: 2 }}
+            >
+              No parameters found.
+            </Typography>
+          ) : (
+            filteredColumns.map((col) => (
+              <ParameterItem key={col}>
                 <FormControlLabel
-                  key={col}
                   control={
                     <Checkbox
                       checked={selectedSet.has(col)}
-                      onChange={(e) => onColumnSelect(col, e.target.checked)}
+                      onChange={(e) =>
+                        onColumnSelect(col, e.target.checked)
+                      }
+                      color="primary"
                     />
                   }
-                  label={col}
+                  label={
+                    <Typography variant="body2" color="text.primary">
+                      {col}
+                    </Typography>
+                  }
+                  sx={{ width: "100%" }}
                 />
-              ))
-            )}
-          </Box>
-        </Box>
-      </Box>
+              </ParameterItem>
+            ))
+          )}
+        </ParameterList>
+      </SectionPaper>
     </Box>
   );
 };
