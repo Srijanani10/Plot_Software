@@ -61,35 +61,6 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
     }));
   };
 
-  const downloadZoomedIndexCSV = () => {
-    if (!zoomedData || zoomedData.length === 0) {
-      alert("No zoomed data available to export.");
-      return;
-    }
-
-    const csvContent = [indexColumn, ...zoomedData.map((row) => row[indexColumn])].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "zoomed_index.csv");
-  };
-
-  const downloadAllParametersInZoomedCSV = () => {
-    if (!zoomedData || zoomedData.length === 0) {
-      alert("No zoomed data available to export.");
-      return;
-    }
-
-    const headers = [indexColumn, ...selectedColumns];
-    const csvRows = zoomedData.map((row) =>
-      [row[indexColumn], ...selectedColumns.map((col) => row[col] ?? "")].join(",")
-    );
-
-    const csvContent = [headers.join(","), ...csvRows].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "all_parameters_zoomed.csv");
-  };
-
   const handleChartEvents = {
     dataZoom: (params) => {
       if (params.batch && params.batch.length > 0) {
@@ -99,6 +70,63 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
         }
       }
     },
+  };
+
+  // 📥 CSV Export Function
+  // Function to download only the visible data in CSV
+  const handleDownloadCSV = () => {
+    if (!chartRef.current) return;
+
+    const echartsInstance = chartRef.current.getEchartsInstance();
+    const model = echartsInstance.getModel();
+    const option = model.option;
+
+    const xAxisData = option.xAxis[0].data;
+    const dataZoom = option.dataZoom && option.dataZoom[0];
+
+    let startIndex = 0;
+    let endIndex = xAxisData.length - 1;
+
+    // Extract dataZoom start/end from model (more reliable)
+    if (dataZoom) {
+      const zoomStart = dataZoom.start != null ? dataZoom.start : 0;
+      const zoomEnd = dataZoom.end != null ? dataZoom.end : 100;
+
+      startIndex = Math.floor((zoomStart / 100) * xAxisData.length);
+      endIndex = Math.floor((zoomEnd / 100) * xAxisData.length);
+
+      console.log("Zoom range (percent):", zoomStart, "-", zoomEnd);
+      console.log("Start index:", startIndex, "End index:", endIndex);
+    }
+
+    const visibleXAxis = xAxisData.slice(startIndex, endIndex + 1);
+
+    if (!visibleXAxis.length) {
+      alert("No data available to export! Please zoom or check your data.");
+      return;
+    }
+
+    // Extract visible data rows
+    const visibleRows = visibleXAxis
+      .map((xVal) => {
+        const row = data.find((item) => item[indexColumn] === xVal);
+        if (!row) return null;
+        return [row[indexColumn], ...selectedColumns.map((col) => row[col] ?? "")];
+      })
+      .filter(Boolean);
+
+    if (!visibleRows.length) {
+      alert("No data available to export! Please zoom or check your data.");
+      return;
+    }
+
+    // Build CSV content
+    const csvHeaders = [indexColumn, ...selectedColumns];
+    const csvRows = visibleRows.map((row) => row.join(","));
+    const csvContent = [csvHeaders.join(","), ...csvRows].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "visible_plot_data.csv");
   };
 
   if (!data || !indexColumn || data.length === 0) {
@@ -152,28 +180,27 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
           onclick: () => {
             if (chartRef.current) {
               const echartsInstance = chartRef.current.getEchartsInstance();
-          
+
               echartsInstance.dispatchAction({
                 type: "dataZoom",
                 startValue: null,
                 endValue: null,
               });
-          
-              // Optionally reset zoomRange to the full x range:
+
               const xValues = data
                 .map((row) => row[indexColumn])
                 .filter((val) => val !== null && val !== undefined && val !== "");
-          
+
               if (xValues.length > 0) {
                 setZoomRange({
                   start: xValues[0],
                   end: xValues[xValues.length - 1],
                 });
               }
-          
+
               zoomState.current = { startValue: null, endValue: null };
             }
-          },                   
+          },
         },
         dataZoom: { yAxisIndex: "none" },
         magicType: { type: ["line", "bar"] },
@@ -218,20 +245,65 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
         boxShadow: "0px 4px 8px rgba(0,0,0,0.1)",
       }}
     >
-      <div style={{ marginBottom: "10px", display: "flex", gap: "10px", alignItems: "center" }}>
+      <div
+        style={{
+          marginBottom: "10px",
+          display: "flex",
+          gap: "10px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <span style={{ fontWeight: "bold" }}>Custom Zooming with X-Axis:</span>
-        <input type="text" name="start" value={zoomRange.start || ""} onChange={handleZoomInputChange} />
+        <input
+          type="text"
+          name="start"
+          value={zoomRange.start || ""}
+          onChange={handleZoomInputChange}
+          placeholder="Start"
+        />
         <span>to</span>
-        <input type="text" name="end" value={zoomRange.end || ""} onChange={handleZoomInputChange} />
-        <button onClick={applyZoom} style={{ padding: "8px 15px", backgroundColor: "#28a745", color: "white" }}>
+        <input
+          type="text"
+          name="end"
+          value={zoomRange.end || ""}
+          onChange={handleZoomInputChange}
+          placeholder="End"
+        />
+        <button
+          onClick={applyZoom}
+          style={{
+            padding: "8px 15px",
+            backgroundColor: "#28a745",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
           Apply Zoom
         </button>
+        <button
+          onClick={handleDownloadCSV}
+          style={{
+            marginBottom: "10px",
+            padding: "8px 16px",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Download Visible Plot as CSV
+        </button>
       </div>
-
-      <button onClick={downloadZoomedIndexCSV}>Download Zoomed Index CSV</button>
-      <button onClick={downloadAllParametersInZoomedCSV}>Download All Parameters in Zoomed CSV</button>
-
-      <ReactECharts ref={chartRef} option={options} style={{ height: "650px", width: "100%" }} onEvents={handleChartEvents} />
+      <ReactECharts
+        ref={chartRef}
+        option={options}
+        style={{ height: "650px", width: "100%" }}
+        onEvents={handleChartEvents}
+      />
     </div>
   );
 };
