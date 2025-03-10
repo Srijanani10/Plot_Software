@@ -152,15 +152,28 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
           onclick: () => {
             if (chartRef.current) {
               const echartsInstance = chartRef.current.getEchartsInstance();
+          
               echartsInstance.dispatchAction({
                 type: "dataZoom",
                 startValue: null,
                 endValue: null,
               });
-
-              setZoomRange({ start: "", end: "" });
+          
+              // Optionally reset zoomRange to the full x range:
+              const xValues = data
+                .map((row) => row[indexColumn])
+                .filter((val) => val !== null && val !== undefined && val !== "");
+          
+              if (xValues.length > 0) {
+                setZoomRange({
+                  start: xValues[0],
+                  end: xValues[xValues.length - 1],
+                });
+              }
+          
+              zoomState.current = { startValue: null, endValue: null };
             }
-          },
+          },                   
         },
         dataZoom: { yAxisIndex: "none" },
         magicType: { type: ["line", "bar"] },

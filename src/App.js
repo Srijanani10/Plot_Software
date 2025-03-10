@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import FileUpload from "./FileUpload";
 import ColumnSelection from "./ColumnSelection";
 import PlotComponent from "./Plot";
-import CustomXAxis from "./CustomXAxis";
-import Export from "./Export";
+// import CustomXAxis from "./CustomXAxis";
+// import Export from "./Export";
 import { parse } from "papaparse";
 import * as XLSX from "xlsx";
 import "./App.css";
@@ -64,8 +64,8 @@ const App = () => {
           onColumnSelect={handleColumnSelect}
           onIndexColumnSelect={handleIndexColumnSelect}
         />
-        <CustomXAxis onApply={(min, max) => console.log("Apply X-Axis Range:", min, max)} />
-        <Export onExportCSV={() => console.log("Export CSV")} onExportHTML={() => console.log("Export HTML")} />
+        {/* <CustomXAxis onApply={(min, max) => console.log("Apply X-Axis Range:", min, max)} />
+        <Export onExportCSV={() => console.log("Export CSV")} onExportHTML={() => console.log("Export HTML")} /> */}
       </div>
       <div className="plot">
         <PlotComponent data={data} selectedColumns={selectedColumns} indexColumn={indexColumn} />
