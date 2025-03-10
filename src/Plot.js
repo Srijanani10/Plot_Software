@@ -73,7 +73,57 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
   };
 
   // 📥 CSV Export Function
-  // Function to download only the visible data in CSV
+  // ✅ Download All Parameters CSV (based on visible zoom range)
+  const handleDownloadZoomedCSV = () => {
+    if (!chartRef.current) return;
+
+    const echartsInstance = chartRef.current.getEchartsInstance();
+    const model = echartsInstance.getModel();
+    const option = model.option;
+
+    const xAxisData = option.xAxis[0].data;
+    const dataZoom = option.dataZoom && option.dataZoom[0];
+
+    let startIndex = 0;
+    let endIndex = xAxisData.length - 1;
+
+    if (dataZoom) {
+      const zoomStart = dataZoom.start != null ? dataZoom.start : 0;
+      const zoomEnd = dataZoom.end != null ? dataZoom.end : 100;
+
+      startIndex = Math.floor((zoomStart / 100) * xAxisData.length);
+      endIndex = Math.floor((zoomEnd / 100) * xAxisData.length);
+    }
+
+    const visibleXAxis = xAxisData.slice(startIndex, endIndex + 1);
+
+    if (!visibleXAxis.length) {
+      alert("No visible data to export!");
+      return;
+    }
+
+    const visibleRows = visibleXAxis
+      .map((xVal) => data.find((row) => row[indexColumn] === xVal))
+      .filter(Boolean);
+
+    if (!visibleRows.length) {
+      alert("No visible data to export!");
+      return;
+    }
+
+    const allKeys = Object.keys(data[0]);
+    const csvHeader = allKeys.join(",");
+    const csvRows = visibleRows.map((row) =>
+      allKeys.map((key) => row[key] ?? "").join(",")
+    );
+
+    const csvContent = [csvHeader, ...csvRows].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "visible_data_all_parameters.csv");
+  };
+
+  // ✅ Download Selected Columns CSV (based on visible zoom range)
   const handleDownloadCSV = () => {
     if (!chartRef.current) return;
 
@@ -87,16 +137,12 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
     let startIndex = 0;
     let endIndex = xAxisData.length - 1;
 
-    // Extract dataZoom start/end from model (more reliable)
     if (dataZoom) {
       const zoomStart = dataZoom.start != null ? dataZoom.start : 0;
       const zoomEnd = dataZoom.end != null ? dataZoom.end : 100;
 
       startIndex = Math.floor((zoomStart / 100) * xAxisData.length);
       endIndex = Math.floor((zoomEnd / 100) * xAxisData.length);
-
-      console.log("Zoom range (percent):", zoomStart, "-", zoomEnd);
-      console.log("Start index:", startIndex, "End index:", endIndex);
     }
 
     const visibleXAxis = xAxisData.slice(startIndex, endIndex + 1);
@@ -106,7 +152,6 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
       return;
     }
 
-    // Extract visible data rows
     const visibleRows = visibleXAxis
       .map((xVal) => {
         const row = data.find((item) => item[indexColumn] === xVal);
@@ -120,7 +165,6 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
       return;
     }
 
-    // Build CSV content
     const csvHeaders = [indexColumn, ...selectedColumns];
     const csvRows = visibleRows.map((row) => row.join(","));
     const csvContent = [csvHeaders.join(","), ...csvRows].join("\n");
@@ -296,6 +340,20 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
           }}
         >
           Download Visible Plot as CSV
+        </button>
+        <button
+          onClick={handleDownloadZoomedCSV}
+          style={{
+            marginBottom: "10px",
+            padding: "8px 16px",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Download all Plot as CSV
         </button>
       </div>
       <ReactECharts
