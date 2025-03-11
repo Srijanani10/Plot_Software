@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Plot_Software/static/css/main.ed680e12.css",
+    "main.js": "/Plot_Software/static/js/main.525ac9d0.js",
+    "static/js/453.955291eb.chunk.js": "/Plot_Software/static/js/453.955291eb.chunk.js",
+    "index.html": "/Plot_Software/index.html",
+    "main.ed680e12.css.map": "/Plot_Software/static/css/main.ed680e12.css.map",
+    "main.525ac9d0.js.map": "/Plot_Software/static/js/main.525ac9d0.js.map",
+    "453.955291eb.chunk.js.map": "/Plot_Software/static/js/453.955291eb.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ed680e12.css",
+    "static/js/main.525ac9d0.js"
+  ]
+}
