@@ -75,3 +75,5 @@ const App = () => {
 };
 
 export default App;
+
+//add the following code to the App.css file
