@@ -2,6 +2,21 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import ReactECharts from "echarts-for-react";
 import { saveAs } from "file-saver";
 
+// Converts numeric timestamps to readable datetime string
+const convertToDateTimeString = (value) => {
+  // If it's already a valid date string, return as-is
+  if (typeof value === "string" && isNaN(Number(value))) return value;
+
+  // If it's a number (timestamp), convert to date string
+  const date = new Date(Number(value) * 1000); // Assuming it's in seconds (Unix timestamp)
+  if (isNaN(date.getTime())) return value;
+
+  const pad = (num) => String(num).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
+
 const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
   const chartRef = useRef(null);
   const zoomState = useRef({ startValue: null, endValue: null });
@@ -22,8 +37,8 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
 
       if (xValues.length > 0) {
         setZoomRange((prev) => ({
-          start: prev.start || xValues[0],
-          end: prev.end || xValues[xValues.length - 1],
+          start: prev.start || convertToDateTimeString(xValues[0]),
+          end: prev.end || convertToDateTimeString(xValues[xValues.length - 1]),
         }));
       }
     }
@@ -51,8 +66,8 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
   useEffect(() => {
     if (data && zoomRange.start && zoomRange.end) {
       const filteredData = data.filter((row) => {
-        const xValue = new Date(row[indexColumn]).getTime();
-        return xValue >= new Date(zoomRange.start).getTime() && xValue <= new Date(zoomRange.end).getTime();
+        const xValue = convertToDateTimeString(row[indexColumn]);
+        return xValue >= zoomRange.start && xValue <= zoomRange.end;
       });
 
       setZoomedData(filteredData);
@@ -109,7 +124,7 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
     }
 
     const visibleRows = visibleXAxis
-      .map((xVal) => data.find((row) => row[indexColumn] === xVal))
+      .map((xVal) => data.find((row) => convertToDateTimeString(row[indexColumn]) === xVal))
       .filter(Boolean);
 
     if (!visibleRows.length) {
@@ -120,8 +135,16 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
     const allKeys = Object.keys(data[0]);
     const csvHeader = allKeys.join(",");
     const csvRows = visibleRows.map((row) =>
-      allKeys.map((key) => row[key] ?? "").join(",")
+      allKeys
+        .map((key) => {
+          if (key === indexColumn) {
+            return convertToDateTimeString(row[key]);
+          }
+          return row[key] ?? "";
+        })
+        .join(",")
     );
+
 
     const csvContent = [csvHeader, ...csvRows].join("\n");
 
@@ -160,9 +183,9 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
 
     const visibleRows = visibleXAxis
       .map((xVal) => {
-        const row = data.find((item) => item[indexColumn] === xVal);
+        const row = data.find((item) => convertToDateTimeString(item[indexColumn]) === xVal);
         if (!row) return null;
-        return [row[indexColumn], ...selectedColumns.map((col) => row[col] ?? "")];
+        return [convertToDateTimeString(row[indexColumn]), ...selectedColumns.map((col) => row[col] ?? "")];
       })
       .filter(Boolean);
 
@@ -182,6 +205,9 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
   if (!data || !indexColumn || data.length === 0) {
     return <div style={{ textAlign: "center", color: "#888", marginTop: "20px" }}>📉 No data to plot.</div>;
   }
+
+  // X-axis values converted to datetime strings
+  const xAxisLabels = data.map((row) => convertToDateTimeString(row[indexColumn]));
 
   const yAxisConfig = selectedColumns.length
     ? selectedColumns.map((col, index) => ({
@@ -238,7 +264,7 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
               });
 
               const xValues = data
-                .map((row) => row[indexColumn])
+                .map((row) => convertToDateTimeString(row[indexColumn]))
                 .filter((val) => val !== null && val !== undefined && val !== "");
 
               if (xValues.length > 0) {
@@ -270,6 +296,7 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
       type: "category",
       name: indexColumn,
       data: data.map((row) => row[indexColumn]),
+      data: xAxisLabels,
     },
     yAxis: yAxisConfig,
     series: series,
