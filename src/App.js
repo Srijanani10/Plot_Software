@@ -13,6 +13,7 @@ const App = () => {
   const [columns, setColumns] = useState([]);
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [indexColumn, setIndexColumn] = useState("");
+  const [showPlotter, setShowPlotter] = useState(false); // NEW STATE to show/hide components
 
   const handleFileUpload = (files) => {
     const file = files[0];
@@ -23,7 +24,6 @@ const App = () => {
       let parsedData;
 
       if (file.name.endsWith(".csv")) {
-        // Parse CSV as 2D array for row manipulation
         const { data: rawData } = parse(result, { header: false });
         parsedData = handleRowDeletion(rawData, "csv");
       } else if (file.name.endsWith(".xlsx")) {
@@ -39,11 +39,9 @@ const App = () => {
         return;
       }
 
-      // After deletion, parse header and rows
       const headers = parsedData[0];
       const rows = parsedData.slice(1);
 
-      // Convert rows back to objects for easier plotting
       const rowObjects = rows.map((row) =>
         headers.reduce((obj, header, index) => {
           obj[header] = row[index];
@@ -53,31 +51,29 @@ const App = () => {
 
       setData(rowObjects);
       setColumns(headers);
-      setSelectedColumns([]); // Reset selected columns on new upload
-      setIndexColumn("");     // Reset index column
+      setSelectedColumns([]);
+      setIndexColumn("");
     };
 
     reader.readAsBinaryString(file);
   };
 
-  // Handles deleting rows and returns cleaned data (2D array)
   const handleRowDeletion = (jsonData, type) => {
     if (!jsonData || jsonData.length === 0) {
       alert("File is empty!");
       return jsonData;
     }
 
-    // Prompt the user to delete any rows
     const confirmDelete = window.confirm(
       "Do you want to delete any row(s)?\n\nNote: Row numbers start from 1 (including header row)."
     );
 
     if (!confirmDelete) {
-      return jsonData; // No deletion requested
+      return jsonData;
     }
 
     const rowNumInput = window.prompt(
-      `Enter the row number(s) to delete (as in Excel, starting from 1).\nFor multiple rows, separate them by commas.\nExample: 2,4`
+      `Enter the row number(s) to delete (starting from 1).\nFor multiple rows, separate them by commas.\nExample: 2,4`
     );
 
     if (!rowNumInput) {
@@ -85,21 +81,19 @@ const App = () => {
       return jsonData;
     }
 
-    // Convert input to row numbers
     let rowNums = rowNumInput
       .split(",")
       .map((num) => parseInt(num.trim(), 10))
       .filter((num) => !isNaN(num) && num >= 1 && num <= jsonData.length)
-      .sort((a, b) => b - a); // Descending order for safe splicing
+      .sort((a, b) => b - a);
 
     if (rowNums.length === 0) {
       alert("No valid rows to delete. Proceeding with original data.");
       return jsonData;
     }
 
-    // Delete rows based on row numbers
     rowNums.forEach((excelRowNum) => {
-      jsonData.splice(excelRowNum - 1, 1); // Subtract 1 because array index starts at 0
+      jsonData.splice(excelRowNum - 1, 1);
     });
 
     alert(`Deleted row(s): ${rowNums.join(", ")}`);
@@ -119,27 +113,43 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <div className="controls">
-        <h1>Data Plotter</h1>
-        <FileUpload onFileUpload={handleFileUpload} />
-        <ColumnSelection
-          columns={columns}
-          selectedColumns={selectedColumns}
-          onColumnSelect={handleColumnSelect}
-          onIndexColumnSelect={handleIndexColumnSelect}
-        />
-        {/* <CustomXAxis onApply={(min, max) => console.log("Apply X-Axis Range:", min, max)} />
-        <Export onExportCSV={() => console.log("Export CSV")} onExportHTML={() => console.log("Export HTML")} /> */}
-      </div>
-      <div className="plot">
-        <PlotComponent
-          data={data}
-          selectedColumns={selectedColumns}
-          indexColumn={indexColumn}
-        />
-      </div>
+      {!showPlotter ? (
+        <div className="start-screen">
+          <h1>Welcome to Data Plotter</h1>
+          <button className="plot-button" onClick={() => setShowPlotter(true)}>
+            Plot Data
+          </button>
+        </div>
+      ) : (
+        <div className="controls-and-plot">
+          <div className="controls">
+            <div className="header">
+              <h1>Data Plotter</h1>
+              <button className="back-button" onClick={() => setShowPlotter(false)}>
+                Back
+              </button>
+            </div>
+            <FileUpload onFileUpload={handleFileUpload} />
+            <ColumnSelection
+              columns={columns}
+              selectedColumns={selectedColumns}
+              onColumnSelect={handleColumnSelect}
+              onIndexColumnSelect={handleIndexColumnSelect}
+            />
+            {/* <CustomXAxis onApply={(min, max) => console.log("Apply X-Axis Range:", min, max)} />
+            <Export onExportCSV={() => console.log("Export CSV")} onExportHTML={() => console.log("Export HTML")} /> */}
+          </div>
+          <div className="plot">
+            <PlotComponent
+              data={data}
+              selectedColumns={selectedColumns}
+              indexColumn={indexColumn}
+            />
+          </div>
+        </div>
+      )}
     </div>
-  );
+  );  
 };
 
 export default App;
