@@ -4,6 +4,7 @@ import ColumnSelection from "./ColumnSelection";
 import PlotComponent from "./Plot";
 // import CustomXAxis from "./CustomXAxis";
 // import Export from "./Export";
+import Analysis from "./Analysis";
 import { parse } from "papaparse";
 import * as XLSX from "xlsx";
 import "./App.css";
@@ -13,7 +14,8 @@ const App = () => {
   const [columns, setColumns] = useState([]);
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [indexColumn, setIndexColumn] = useState("");
-  const [showPlotter, setShowPlotter] = useState(false); // NEW STATE to show/hide components
+  const [showPlotter, setShowPlotter] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false); // NEW STATE for analysis
 
   const handleFileUpload = (files) => {
     const file = files[0];
@@ -113,19 +115,41 @@ const App = () => {
 
   return (
     <div className="app-container">
-      {!showPlotter ? (
+      {!showPlotter && !showAnalysis ? (
         <div className="start-screen">
           <h1>Welcome to Data Plotter</h1>
-          <button className="plot-button" onClick={() => setShowPlotter(true)}>
-            Plot Data
-          </button>
+          <div className="button-container">
+            <button
+              className="plot-button"
+              onClick={() => {
+                setShowPlotter(true);
+                setShowAnalysis(false);
+              }}
+            >
+              Plot Data
+            </button>
+            <button
+              className="analysis-button"
+              onClick={() => {
+                setShowAnalysis(true);
+                setShowPlotter(false);
+              }}
+            >
+              Analysis
+            </button>
+          </div>
         </div>
-      ) : (
+      ) : null}
+
+      {showPlotter && (
         <div className="controls-and-plot">
           <div className="controls">
             <div className="header">
               <h1>Data Plotter</h1>
-              <button className="back-button" onClick={() => setShowPlotter(false)}>
+              <button
+                className="back-button"
+                onClick={() => setShowPlotter(false)}
+              >
                 Back
               </button>
             </div>
@@ -136,8 +160,6 @@ const App = () => {
               onColumnSelect={handleColumnSelect}
               onIndexColumnSelect={handleIndexColumnSelect}
             />
-            {/* <CustomXAxis onApply={(min, max) => console.log("Apply X-Axis Range:", min, max)} />
-            <Export onExportCSV={() => console.log("Export CSV")} onExportHTML={() => console.log("Export HTML")} /> */}
           </div>
           <div className="plot">
             <PlotComponent
@@ -148,8 +170,14 @@ const App = () => {
           </div>
         </div>
       )}
+
+      {showAnalysis && (
+        <Analysis goBack={() => setShowAnalysis(false)} />
+      )}
+
     </div>
-  );  
+  );
 };
 
 export default App;
+//end of Path: Plot_Software/src/App.js
