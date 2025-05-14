@@ -67,7 +67,7 @@ const App = () => {
     }
 
     const confirmDelete = window.confirm(
-      "Do you want to delete any row(s)?\n\nNote: Row numbers start from 1 (including header row)."
+      "Do you want to delete any row(s)?\n Delete the rows if the data is influx\n\nNote: Row numbers start from 1 (including header row)."
     );
 
     if (!confirmDelete) {
@@ -75,7 +75,7 @@ const App = () => {
     }
 
     const rowNumInput = window.prompt(
-      `Enter the row number(s) to delete (starting from 1).\nFor multiple rows, separate them by commas.\nExample: 2,4`
+      `Enter the row number(s) to delete (starting from 1).\nFor multiple rows, separate them by commas.\nExample: for influx remove row number 1, 3, 4, 5\n\nRow numbers:`
     );
 
     if (!rowNumInput) {

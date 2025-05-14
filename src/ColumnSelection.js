@@ -156,18 +156,20 @@ const ColumnSelection = ({
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
             {label}
           </Typography>
-          {data.map((param) => (
-            <FormControlLabel
-              key={param}
-              control={
-                <Checkbox
-                  checked={selectedSet.has(param)}
-                  onChange={(e) => onColumnSelect(param, e.target.checked)}
-                />
-              }
-              label={param}
-            />
-          ))}
+          <Stack direction="column" spacing={1}>
+            {data.map((param) => (
+              <FormControlLabel
+                key={param}
+                control={
+                  <Checkbox
+                    checked={selectedSet.has(param)}
+                    onChange={(e) => onColumnSelect(param, e.target.checked)}
+                  />
+                }
+                label={param}
+              />
+            ))}
+          </Stack>
         </Box>
       </Collapse>
     );
