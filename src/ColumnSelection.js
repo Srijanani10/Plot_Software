@@ -11,10 +11,12 @@ import {
   MenuItem,
   Paper,
   Divider,
+  Button,
+  Collapse,
+  Stack,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-// Styled container for sections
 const SectionPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
   marginBottom: theme.spacing(2),
@@ -22,7 +24,6 @@ const SectionPaper = styled(Paper)(({ theme }) => ({
   boxShadow: theme.shadows[2],
 }));
 
-// Scrollable list for parameters
 const ParameterList = styled(Box)(({ theme }) => ({
   maxHeight: "300px",
   overflowY: "auto",
@@ -50,6 +51,7 @@ const ColumnSelection = ({
   onIndexColumnSelect,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [visibleGroup, setVisibleGroup] = useState(null); // 'motor' | 'battery' | null
 
   const filteredColumns = Array.isArray(columns)
     ? columns.filter((col) =>
@@ -58,7 +60,6 @@ const ColumnSelection = ({
     : [];
 
   const selectedSet = new Set(selectedColumns);
-
   const allFilteredSelected =
     filteredColumns.length > 0 &&
     filteredColumns.every((col) => selectedSet.has(col));
@@ -69,13 +70,94 @@ const ColumnSelection = ({
     });
   };
 
+  const motorErrors = [
+    "DriveError_Motor_hall [SA: 02]",
+    "Motor_Stalling [SA: 02]",
+    "Motor_Phase_loss [SA: 02]",
+    "Controller_Over_Temeprature [SA: 02]",
+    "Motor_Over_Temeprature [SA: 02]",
+    "Throttle_Error [SA: 02]",
+    "MOSFET_Protection [SA: 02]",
+    "DriveError_Controller_OverVoltag [SA: 02]",
+    "Controller_Undervoltage [SA: 02]",
+    "Overcurrent_Fault [SA: 02]",
+    "Drive_Error_Flag [SA: 02]",
+  ];
+
+  const batteryErrors = [
+    "CellUnderVolProt [SA: 09]",
+    "CellOverVolProt [SA: 09]",
+    "PackUnderVolProt [SA: 09]",
+    "PackOverVolProt [SA: 09]",
+    "ChgUnderTempProt [SA: 09]",
+    "ChgOverTempProt [SA: 09]",
+    "DchgUnderTempProt [SA: 09]",
+    "DchgOverCurrProt [SA: 09]",
+    "CellOverVolWarn [SA: 09]",
+    "FetTempProt [SA: 09]",
+    "ResSocProt [SA: 09]",
+    "FetFailure [SA: 09]",
+    "TempSenseFault [SA: 09]",
+    "PackUnderVolWarn [SA: 09]",
+    "PackOverVolWarn [SA: 09]",
+    "ChgUnderTempWarn [SA: 09]",
+    "ChgOverTempWarn [SA: 09]",
+    "DchgUnderTempWarn [SA: 09]",
+    "DchgOverTempWarn [SA: 09]",
+    "LedStatus [SA: 09]",
+    "PreChgFetStatus [SA: 09]",
+    "ChgFetStatus [SA: 09]",
+    "DchgFetStatus [SA: 09]",
+    "ResStatus [SA: 09]",
+    "ShortCktProt [SA: 09]",
+    "DschgPeakProt [SA: 09]",
+    "ActiveCellBalStatus [SA: 09]",
+    "ChgAuth [SA: 09]",
+    "ChgPeakProt [SA: 09]",
+  ];
+
+  const existingMotorErrors = motorErrors.filter((param) =>
+    columns.includes(param)
+  );
+  const existingBatteryErrors = batteryErrors.filter((param) =>
+    columns.includes(param)
+  );
+
+  const toggleGroup = (group) => {
+    setVisibleGroup((prev) => (prev === group ? null : group));
+  };
+
+  const renderErrorGroup = (group, label, data) => {
+    return (
+      <Collapse in={visibleGroup === group} unmountOnExit>
+        <Box mt={2}>
+          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+            {label}
+          </Typography>
+          {data.map((param) => (
+            <FormControlLabel
+              key={param}
+              control={
+                <Checkbox
+                  checked={selectedSet.has(param)}
+                  onChange={(e) => onColumnSelect(param, e.target.checked)}
+                />
+              }
+              label={param}
+            />
+          ))}
+        </Box>
+      </Collapse>
+    );
+  };
+
   return (
     <Box>
       <Typography variant="h5" color="primary" fontWeight={600} gutterBottom>
         Column Selection
       </Typography>
 
-      {/* X-Axis Selector */}
+      {/* X-Axis */}
       <SectionPaper>
         <Typography variant="subtitle1" fontWeight={500} gutterBottom>
           Select X-Axis Column
@@ -96,7 +178,7 @@ const ColumnSelection = ({
         </FormControl>
       </SectionPaper>
 
-      {/* Search Section */}
+      {/* Search Bar */}
       <SectionPaper>
         <Typography variant="subtitle1" fontWeight={500} gutterBottom>
           Search Columns
@@ -111,9 +193,36 @@ const ColumnSelection = ({
         />
       </SectionPaper>
 
-      
+      {/* Error Buttons */}
+      <SectionPaper>
+        <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+          Error Parameters
+        </Typography>
+        <Stack direction="row" spacing={2}>
+          <Button
+            variant="contained"
+            color={visibleGroup === "motor" ? "primary" : "inherit"}
+            disabled={existingMotorErrors.length === 0}
+            onClick={() => toggleGroup("motor")}
+          >
+            Motor Errors
+          </Button>
+          <Button
+            variant="contained"
+            color={visibleGroup === "battery" ? "primary" : "inherit"}
+            disabled={existingBatteryErrors.length === 0}
+            onClick={() => toggleGroup("battery")}
+          >
+            Battery Errors
+          </Button>
+        </Stack>
 
-      {/* Y-Axis Parameter Selection */}
+        {/* Conditionally Render Error Checkboxes */}
+        {renderErrorGroup("motor", "Motor Error Parameters", existingMotorErrors)}
+        {renderErrorGroup("battery", "Battery Error Parameters", existingBatteryErrors)}
+      </SectionPaper>
+
+      {/* Y-Axis Parameters */}
       <SectionPaper>
         <Typography variant="subtitle1" fontWeight={500} gutterBottom>
           Select Y-Axis Parameters
@@ -154,9 +263,7 @@ const ColumnSelection = ({
                   control={
                     <Checkbox
                       checked={selectedSet.has(col)}
-                      onChange={(e) =>
-                        onColumnSelect(col, e.target.checked)
-                      }
+                      onChange={(e) => onColumnSelect(col, e.target.checked)}
                       color="primary"
                     />
                   }
