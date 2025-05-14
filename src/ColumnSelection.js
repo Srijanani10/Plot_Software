@@ -72,8 +72,11 @@ const ColumnSelection = ({
 
   const motorErrors = [
     "DriveError_Motor_hall [SA: 02]",
+    "driveErrorMotorHall",
     "Motor_Stalling [SA: 02]",
+    "motorStalling",
     "Motor_Phase_loss [SA: 02]",
+    "motorPhaseLoss",
     "Controller_Over_Temeprature [SA: 02]",
     "Motor_Over_Temeprature [SA: 02]",
     "Throttle_Error [SA: 02]",
@@ -114,6 +117,25 @@ const ColumnSelection = ({
     "ActiveCellBalStatus [SA: 09]",
     "ChgAuth [SA: 09]",
     "ChgPeakProt [SA: 09]",
+    "cellOVP",
+    "packOVP",
+    "cellUVP",
+    "packUVP",
+    "chargeOCP",
+    "chargePeakProt",
+    "dischargeOCP1",
+    "dischargeOCP2",
+    "chargeOTP",
+    "dischargeOTP",
+    "chargeUTP",
+    "dischargeUTP",
+    "batMaxTemp",
+    "fetFailure",
+    "batLowSocWarn",
+    "preChargeFetStatus",
+    "MOSFETTemp",
+    "latchProtection",
+    "unauthChgFault"
   ];
 
   const existingMotorErrors = motorErrors.filter((param) =>

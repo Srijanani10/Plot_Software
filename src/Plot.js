@@ -365,6 +365,7 @@ const PlotComponent = ({ data, selectedColumns, indexColumn }) => {
 
       <ReactECharts
         ref={chartRef}
+        key={selectedColumns.join(",")} // <-- Force re-render on selectedColumns change
         option={options}
         style={{
           height: "600px",
